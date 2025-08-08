@@ -71,7 +71,7 @@ async function checkSession() {
       console.log("Recent session detected, skipping session check.");
       showApp();
       const plan = sessionStorage.getItem("plan");
-      setCurrentPlanBadgeOnElem(plan && plan == "pro" ? proPlan : basicPlan);
+      checkPlan(plan && plan == "pro" ? proPlan : basicPlan);
       return;
     }
 
@@ -575,19 +575,16 @@ document.getElementById("upgradeBtn").addEventListener("click", async () => {
       sessionStorage.setItem("plan", "pro");
       sessionStorage.setItem("license_key", licenseKey);
 
-      setCurrentPlanBadgeOnElem(proPlan);
+      checkPlan(proPlan);
 
       licenseStatus.classList.add("d-none");
       licenseSection.classList.add("d-none");
       appContent.classList.remove("d-none");
-      basicPlanBtn.disabled = false;
       licenseKey.disabled = true;
     } else {
-      setCurrentPlanBadgeOnElem(basicPlan);
+      checkPlan(basicPlan);
 
       licenseStatus.classList.remove("d-none");
-      proPlanBtn.disabled = false;
-      basicPlanBtn.disabled = true;
       licenseKey.disabled = false;
       console.log("error in ret", ret);
     }
