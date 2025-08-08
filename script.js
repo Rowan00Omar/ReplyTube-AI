@@ -70,6 +70,8 @@ async function checkSession() {
     if (lastLogin && Date.now() - parseInt(lastLogin) < 10 * 60 * 1000) {
       console.log("Recent session detected, skipping session check.");
       showApp();
+      const plan = sessionStorage.getItem("plan");
+      setCurrentPlanBadgeOnElem(plan && plan == "pro" ? proPlan : basicPlan);
       return;
     }
 
