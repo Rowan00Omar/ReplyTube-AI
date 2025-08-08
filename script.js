@@ -80,7 +80,6 @@ async function checkSession() {
           const token = await user.getIdToken();
           const exp = user.stsTokenManager.expirationTime;
 
-          console.log("login ", token, exp, lastLogin);
           if (Date.now() >= exp) {
             console.warn("⏰ Token expired. Trying to re-auth");
             return;
