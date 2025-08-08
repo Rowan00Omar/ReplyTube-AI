@@ -358,7 +358,7 @@ document
 
     try {
       const user = auth.currentUser || (await getCurrentUser());
-      console.log("generte user", user);
+      // console.log("generte user", user);
 
       if (user) {
         const idToken = await user.getIdToken();
@@ -434,12 +434,14 @@ document
 
           const data = await response.json();
 
+          console.log(data);
+
           results.style.display = "block";
 
           successNote.innerHTML =
             outputMode === "google_sheet"
               ? `Saved to Google Sheet: <a href="${sheetUrl}" target="_blank">${sheetUrl}</a>`
-              : "Your Excel file has been generated (or downloaded if triggered by backend).";
+              : "Your Excel file has been generated.";
 
           data["replies"].forEach((pair) => {
             const row = document.createElement("tr");
@@ -449,9 +451,16 @@ document
             resultTable.appendChild(row);
           });
 
-          if (outputMode === "excel") {
+          if (
+            outputMode === "excel" &&
+            data["replies"] &&
+            data["replies"].length > 0
+          ) {
             downloadExcel(data["replies"], videoId);
           }
+
+          submitBtn.disabled = false;
+          hideGenerationStatus();
         } catch (err) {
           console.error(err);
           submitBtn.disabled = false;
@@ -461,6 +470,7 @@ document
       } else {
         console.error("user not logged in in generate");
         showLogin();
+        // hideGenerationStatus();
       }
     } catch (e) {
       submitBtn.disabled = false;
