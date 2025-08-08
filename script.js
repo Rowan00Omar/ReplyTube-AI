@@ -44,13 +44,14 @@ function showConnectionError() {
 }
 
 async function loadEnv() {
-  const env = await fetch("/env.json").then((res) => res.json());
+  const env = await fetch(baseURL + "/get-secret").then((res) => res.json());
+
   // 1. Initialize Firebase
   const firebaseConfig = {
     apiKey: env.FB_API_KEY,
-    authDomain: env.FB_AUTH_DOMAIN,
-    projectId: env.FB_PROJECT_ID,
-    storageBucket: env.FB_STORAGE,
+    authDomain: "comment-replier-9dcd2.firebaseapp.com",
+    projectId: "comment-replier-9dcd2",
+    storageBucket: "comment-replier-9dcd2.firebasestorage.app",
     messagingSenderId: "610375916382",
     appId: env.FB_APP_ID,
     measurementId: "G-E2W9YL40FT",
@@ -79,7 +80,7 @@ async function checkSession() {
           const token = await user.getIdToken();
           const exp = user.stsTokenManager.expirationTime;
 
-          console.log("token and login ", token, exp, lastLogin);
+          console.log("login ", token, exp, lastLogin);
           if (Date.now() >= exp) {
             console.warn("⏰ Token expired. Trying to re-auth");
             return;
@@ -94,35 +95,6 @@ async function checkSession() {
             console.log("You need to login again");
             showLogin();
           }
-
-          // const response = await fetch(baseURL + "/login", {
-          //   method: "POST",
-          //   // credentials: "include",
-          //   headers: {
-          //     "Content-Type": "application/json",
-          //     Authorization: "Bearer " + token,
-          //   },
-          // });
-
-          // const data = await response.json();
-          // if (!response.ok) {
-          //   console.error("Auto-login failed.");
-          //   return;
-          // }
-          // console.log("data", data["user"]);
-          // const email = data["user"]["email"];
-          // const userPlan = data["user"]["plan"] || "basic";
-
-          // sessionStorage.setItem(
-          //   "lastSuccessfulLogin",
-          //   Date.now().toString()
-          // );
-          // sessionStorage.setItem("email", email);
-          // sessionStorage.setItem("plan", userPlan);
-
-          // showSignOutButton(email);
-          // showApp();
-          // checkPlan(userPlan);
         } catch (e) {
           console.log("error in login: ", e.message || e.toString());
           showLogin();
@@ -132,25 +104,6 @@ async function checkSession() {
         showLogin();
       }
     });
-
-    // const res = await fetch(baseURL + "/me", {
-    //   method: "GET",
-    //   credentials: "include", // very important: send cookies
-    // });
-
-    // const userData = await res.json();
-    // console.log(userData.status_code);
-    // if (res.ok && userData.status_code == 200) {
-    //   console.log("User session is valid:", userData);
-    //   showSignOutButton(userData["email"]);
-    //   showApp();
-    //   sessionStorage.setItem("lastSuccessfulLogin", Date.now().toString());
-    //   sessionStorage.setItem("email", userData["email"]);
-    // } else {
-    //   console.log("Not valid session ", res, userData);
-
-    //   await loginFromFB();
-    // }
   } catch (err) {
     console.error("Error checking session:", err);
     // await loginFromFB();
@@ -538,11 +491,10 @@ document
           submitBtn.disabled = false;
           const error = err.message || err.toString();
           if (error.includes("Video Details Error")) setGenerationStatus(error);
-
         }
       } else {
         console.error("user not logged in in generate");
-        showLogin()
+        showLogin();
       }
     } catch (e) {
       submitBtn.disabled = false;
@@ -551,7 +503,7 @@ document
         showLogin();
       }
       console.log("Error: " + err);
-      setGenerationStatus('Error occured');
+      setGenerationStatus("Error occured");
     }
   });
 
