@@ -247,48 +247,13 @@ function hideGenerationStatus() {
 window.addEventListener("DOMContentLoaded", async () => {
   hideGenerationStatus();
 
-  await loadEnv();
-  await checkSession();
-
-  [
-    { comment: "0", reply: "0" },
-    { comment: "1", reply: "1" },
-    { comment: "2", reply: "2" },
-    { comment: "3", reply: "3" },
-    { comment: "4", reply: "4" },
-    { comment: "5", reply: "5" },
-    { comment: "6", reply: "6" },
-    { comment: "7", reply: "7" },
-    { comment: "8", reply: "8" },
-    { comment: "9", reply: "9" },
-    { comment: "10", reply: "10" },
-    { comment: "11", reply: "11" },
-    { comment: "12", reply: "12" },
-    { comment: "13", reply: "13" },
-    { comment: "14", reply: "14" },
-    { comment: "15", reply: "15" },
-    { comment: "16", reply: "16" },
-    { comment: "17", reply: "17" },
-    { comment: "18", reply: "18" },
-    { comment: "19", reply: "19" },
-    { comment: "20", reply: "20" },
-    { comment: "21", reply: "21" },
-    { comment: "22", reply: "22" },
-    { comment: "23", reply: "23" },
-    { comment: "24", reply: "24" },
-    { comment: "25", reply: "25" },
-    { comment: "26", reply: "26" },
-    { comment: "27", reply: "27" },
-    { comment: "28", reply: "28" },
-    { comment: "29", reply: "29" },
-  ].forEach((pair) => {
-    const row = document.createElement("tr");
-    row.innerHTML = `<td>${sanitize(pair.comment)}</td><td>${sanitize(
-      pair.reply
-    )}</td>`;
-    resultTable.appendChild(row);
-  });
-  //TODO: do i need to check the liscense from db (to not be changed by user in frontend)
+  try {
+    await loadEnv();
+    await checkSession();
+  } catch (e) {
+    console.log("something wrong ", e.message || e.toString());
+    showLogin();
+  }
 });
 
 /* ----------- Main app  ------------ */
