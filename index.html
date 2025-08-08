@@ -14,21 +14,21 @@
     />
 
     <link rel="stylesheet" href="./style.css" />
-    <link rel="icon" href="images/api_icon.png" type="image/png">
+    <link rel="icon" href="images/api_icon.png" type="image/png" />
   </head>
   <body>
     <header>
       <nav class="navbar navbar-expand-lg navbar-light">
         <div class="container-fluid">
           <a class="navbar-brand" href="#generateRepliesForm">
-             <img
-                src="images/api_icon.png"
-                alt="ReplyTube AI"
-
-                class="img"
-                style="width: 10%;"
-              />
-            ReplyTube AI</a>
+            <img
+              src="images/api_icon.png"
+              alt="ReplyTube AI"
+              class="img"
+              style="width: 10%"
+            />
+            ReplyTube AI</a
+          >
           <div class="d-flex">
             <a href="#pricing" class="btn btn-outline-secondary me-2"
               >Pricing</a
@@ -155,8 +155,10 @@
 
                 <div class="mb-3">
                   <label for="channelId" class="form-label"
-                    >YouTube Channel ID</label
-                  >
+                    >YouTube Channel ID 
+                    <a href="https://studio.youtube.com/" target="_blank"
+                      > <i class="bi bi-box-arrow-up-right sec-text-color"></i></a
+                  ></label>
                   <input
                     type="text"
                     class="form-control"
@@ -251,7 +253,9 @@
               </button>
             </div>
 
-            <p class="align-self-center d-none" id="generationStatus">Loading</p>
+            <p class="align-self-center d-none" id="generationStatus">
+              Loading
+            </p>
           </form>
 
           <!-- Results -->
