@@ -32,7 +32,7 @@ const proPlan = document.getElementById("proPlan");
 const proPlanBtn = document.getElementById("proPlanBtn");
 const upgradeNote = document.getElementById("upgradeNote");
 
-const baseURL = "http://127.0.0.1:8000"; // "https://youtube-comment-replier-production.up.railway.app";
+const baseURL = "https://youtube-comment-replier-production.up.railway.app";
 
 let app;
 let auth;
