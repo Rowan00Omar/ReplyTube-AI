@@ -30,8 +30,7 @@ const proPlan = document.getElementById("proPlan");
 const proPlanBtn = document.getElementById("proPlanBtn");
 const upgradeNote = document.getElementById("upgradeNote");
 
-let baseURL = "https://youtube-comment-replier-production.up.railway.app";
-baseURL = "http://127.0.0.1:8000";
+const baseURL = "https://youtube-comment-replier-production.up.railway.app";
 
 let app;
 let auth;
@@ -554,7 +553,7 @@ basicPlanBtn.addEventListener("click", async (event) => {
 
 proPlanBtn.addEventListener("click", (e) => {
   // window.open(
-  //   "https://rowanomar.gumroad.com/l/YouTubeCommentReplierAPI",
+  //   "https://rowanomar.gumroad.com/l/ReplyTubAI",
   //   "_blank"
   // );
   licenseSection.classList.remove("d-none");
