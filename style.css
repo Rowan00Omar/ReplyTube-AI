@@ -16,7 +16,7 @@ form {
 button {
   padding: 10px;
   width: 100%;
-  
+
   color: white;
   border: none;
   border-radius: 4px;
@@ -36,13 +36,12 @@ button {
 
 .btn-outline-primary {
   border: 2px solid #8b2c2c;
-color: #8b2c2c;
+  color: #8b2c2c;
 }
 
 .btn-outline-primary:hover {
   background: linear-gradient(135deg, #8b2c2c, #3f1d1d);
-    border-color: #3f1d1d;
-
+  border-color: #3f1d1d;
 }
 
 button:disabled {
@@ -75,11 +74,11 @@ th {
   background: #f0f0f0;
 }
 
-.sec-text-color{
-color: #938686;
+.sec-text-color {
+  color: #938686;
 }
 
-header{
+header {
   background-color: #fdfafa;
 }
 
@@ -106,17 +105,13 @@ header{
   padding: 60px 0;
 }
 
-
-#main-app{
+#main-app {
   background-color: #f0eae7;
 }
 
-#contact{
-
+#contact {
   background-color: #f0eae7;
 }
-
-
 
 .footer {
   background-color: #3f1d1d;
@@ -137,5 +132,11 @@ header{
   th,
   td {
     font-size: 14px;
+  }
+  form {
+    min-width: 360px !important;
+  }
+  #app-content{
+    flex-wrap:wrap
   }
 }

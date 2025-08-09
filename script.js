@@ -4,6 +4,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   onAuthStateChanged,
+  signOut,
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
 const appContent = document.getElementById("app-content");
@@ -24,13 +25,14 @@ const submitBtn = document.getElementById("submitBtn");
 const generationStatus = document.getElementById("generationStatus");
 
 const licenseSection = document.getElementById("licenseSection");
+const licenseKeyInp = document.getElementById("licenseKey");
 const basicPlan = document.getElementById("basicPlan");
 const basicPlanBtn = document.getElementById("basicPlanBtn");
 const proPlan = document.getElementById("proPlan");
 const proPlanBtn = document.getElementById("proPlanBtn");
 const upgradeNote = document.getElementById("upgradeNote");
 
-const baseURL = "https://youtube-comment-replier-production.up.railway.app";
+const baseURL = "http://127.0.0.1:8000"; // "https://youtube-comment-replier-production.up.railway.app";
 
 let app;
 let auth;
@@ -66,7 +68,7 @@ async function checkSession() {
   try {
     const lastLogin = sessionStorage.getItem("lastSuccessfulLogin");
     // within 10 minutes
-    if (lastLogin && Date.now() - parseInt(lastLogin) < 10 * 60 * 1000) {
+    if (lastLogin && Date.now() - parseInt(lastLogin) < 60 * 60 * 1000) {
       console.log("Recent session detected, skipping session check.");
       showApp();
       checkPlan(sessionStorage.getItem("plan"));
@@ -78,18 +80,18 @@ async function checkSession() {
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
-          const token = await user.getIdToken();
           const exp = user.stsTokenManager.expirationTime;
 
           if (Date.now() >= exp) {
             console.warn("⏰ Token expired. Trying to re-auth");
+            await signOut(auth);
+            sessionStorage.clear();
             return;
           }
           const email = sessionStorage.getItem("email");
           const plan = sessionStorage.getItem("plan");
           if (email && plan) {
             showSignOutButton(email);
-            console.log("emali", email);
             showApp();
             checkPlan(plan);
           } else {
@@ -98,10 +100,12 @@ async function checkSession() {
           }
         } catch (e) {
           console.log("error in login: ", e.message || e.toString());
+          await signOut(auth);
           showLogin();
         }
       } else {
         console.log("not login");
+
         showLogin();
       }
     });
@@ -140,11 +144,9 @@ function checkPlan(plan) {
 
 async function changePlan(newPlan, licenseKey = null) {
   const user = auth.currentUser || (await getCurrentUser());
-  console.log("upgrade user", user);
 
   if (user) {
     const idToken = await user.getIdToken();
-    console.log("token in upgrade", idToken);
 
     if (!idToken) {
       throw new Error("Invalid token. Please login");
@@ -157,7 +159,7 @@ async function changePlan(newPlan, licenseKey = null) {
         Authorization: "Bearer " + idToken,
       },
       body: JSON.stringify({
-        email,
+        email: user["email"],
         license_key: licenseKey,
         new_plan: newPlan,
       }),
@@ -169,12 +171,14 @@ async function changePlan(newPlan, licenseKey = null) {
 
     if (!res.ok || !data.success) {
       console.log(data);
-      throw new Error("Error changing plan");
+      // showToast("Error changing plan. Please, contact admin");
+      throw new Error("Error changing plan " + data["detail"] || "");
     }
 
     return data;
   } else {
     console.warn("No user is logged in");
+
     return {
       success: false,
     };
@@ -220,6 +224,9 @@ function showApp() {
 function showLogin() {
   signInPrompt.classList.remove("d-none");
   appContent.classList.add("d-none");
+
+  proPlanBtn.disabled = true;
+  basicPlanBtn.disabled = true;
 }
 
 function showSignOutButton(userEmail) {
@@ -368,7 +375,6 @@ document
 
         const url = document.getElementById("vidoeUrl").value.trim();
         const videoId = extractVideoId(url);
-
         if (!videoId) {
           alert("Please enter a valid YouTube video URL.");
           submitBtn.disabled = false;
@@ -408,7 +414,7 @@ document
         const sheetUrl = sheetUrlInput.value.trim();
         const sheetName = sheetNameInput.value.trim();
 
-        results.style.display = "none";
+        results.classList.add("d-none");
         resultTable.innerHTML = "";
         successNote.innerHTML = "";
 
@@ -439,12 +445,14 @@ document
 
           console.log(data);
 
-          results.style.display = "block";
+          results.classList.remove("d-none");
 
           successNote.innerHTML =
-            outputMode === "google_sheet"
-              ? `Saved to Google Sheet: <a href="${sheetUrl}" target="_blank">${sheetUrl}</a>`
-              : "Your Excel file has been generated.";
+            data["replies"] && data["replies"].length > 0
+              ? outputMode === "google_sheet"
+                ? `Saved to Google Sheet: <a href="${sheetUrl}" target="_blank">${sheetUrl}</a>`
+                : "Your Excel file has been generated."
+              : "No comments";
 
           data["replies"].forEach((pair) => {
             const row = document.createElement("tr");
@@ -469,6 +477,8 @@ document
           submitBtn.disabled = false;
           const error = err.message || err.toString();
           if (error.includes("Video Details Error")) setGenerationStatus(error);
+          else if (error.includes("No comments found"))
+            setGenerationStatus("Error: no comments found");
         }
       } else {
         console.error("user not logged in in generate");
@@ -494,24 +504,27 @@ function checkGoogleSheet(plan) {
     googleSheetOption.disabled = false;
     sheetUrlInput.disabled = false;
     sheetNameInput.disabled = false;
-    
+
     // Optional: add visual cue
     googleSheetOption.style.opacity = 1;
-
   } else {
     upgradeNote.classList.remove("d-none");
     googleSheetRadio.disabled = true;
     googleSheetOption.disabled = true;
     sheetUrlInput.disabled = true;
     sheetNameInput.disabled = true;
-    
+
     // Optional: add visual cue
     googleSheetOption.style.opacity = 0.5;
   }
 }
 
 function setCurrentPlanBadgeOnElem(topParentElement) {
+  const haveBadge = document.querySelector(".badge");
+  if (haveBadge) haveBadge.remove();
+
   const span = document.createElement("span");
+
   span.classList.add(
     ...[
       "badge",
@@ -539,14 +552,21 @@ basicPlanBtn.addEventListener("click", async (event) => {
       sessionStorage.setItem("plan", "basic");
 
       appContent.classList.remove("d-none");
-      event.target.disabled = true;
-      proPlanBtn.disabled = false;
+
+      checkPlan("basic");
+      showToast("Plan changed successfully", "success");
     } else {
       event.target.disabled = false;
       proPlanBtn.disabled = true;
     }
   } catch (e) {
-    console.log("Error in changing to basic: " + e.message || e.toString());
+    const err = e.message || e.toString();
+    console.log("Error in changing to basic: " + err);
+    if (err.includes("Invalid Gumroad license")) {
+      showToast("Invalid Licesne. Please check it again");
+    } else {
+      showToast("Error in changing plan. Please, contact admin");
+    }
     event.target.disabled = false;
     proPlanBtn.disabled = true;
   }
@@ -562,46 +582,112 @@ proPlanBtn.addEventListener("click", (e) => {
   e.target.disabled = true;
 });
 
-document.getElementById("upgradeBtn").addEventListener("click", async () => {
-  // Check license from backend
-  const licenseKey = document.getElementById("licenseKey").value.trim();
-  const licenseStatus = document.getElementById("licenseStatus");
-
-  if (!licenseKey) {
-    licenseStatus.textContent = "Please enter a license key.";
-    licenseStatus.classList.remove("d-none");
-    proPlanBtn.disabled = false;
-    basicPlanBtn.disabled = true;
-    return;
-  }
-
-  licenseStatus.classList.add("d-none");
-
-  try {
-    const ret = await changePlan("pro", licenseKey);
-
-    if (ret && ret.success == true) {
-      // Save user token/API key locally
-      sessionStorage.setItem("plan", "pro");
-      sessionStorage.setItem("license_key", licenseKey);
-
-      checkPlan(proPlan);
-
-      licenseStatus.classList.add("d-none");
-      licenseSection.classList.add("d-none");
-      appContent.classList.remove("d-none");
-      licenseKey.disabled = true;
-    } else {
-      checkPlan(basicPlan);
-
-      licenseStatus.classList.remove("d-none");
-      licenseKey.disabled = false;
-      console.log("error in ret", ret);
+document
+  .getElementById("upgradeBtn")
+  .addEventListener("click", async (event) => {
+    // Check license from backend
+    event.target.disabled = true;
+    const savedLicenseKey = sessionStorage.getItem("license_key");
+    if (savedLicenseKey) {
+      licenseKeyInp.disabled = true;
+      licenseKeyInp.value = savedLicenseKey;
     }
-  } catch (e) {
-    console.log(e);
-    proPlanBtn.disabled = false;
-    basicPlanBtn.disabled = true;
-    //TODO: make sure the login container is shown
+
+    const licenseKey = licenseKeyInp.value.trim();
+    const licenseStatus = document.getElementById("licenseStatus");
+
+    if (!licenseKey) {
+      licenseStatus.textContent = "Please enter a license key.";
+      licenseStatus.classList.remove("d-none");
+      proPlanBtn.disabled = false;
+      basicPlanBtn.disabled = true;
+      return;
+    }
+
+    licenseStatus.classList.add("d-none");
+
+    try {
+      const ret = await changePlan("pro", licenseKey);
+
+      if (ret && ret.success == true) {
+        // Save user token/API key locally
+        sessionStorage.setItem("plan", "pro");
+        sessionStorage.setItem("license_key", licenseKey);
+
+        checkPlan("pro");
+
+        licenseStatus.classList.add("d-none");
+        licenseSection.classList.add("d-none");
+        appContent.classList.remove("d-none");
+        licenseKeyInp.disabled = true;
+        proPlanBtn.innerText = "Choose plan";
+        showToast("Plan changed successfully", "success");
+      } else {
+        checkPlan("basic");
+
+        licenseStatus.classList.remove("d-none");
+        licenseKeyInp.disabled = false;
+        event.target.disabled = false;
+        console.log("error in ret", ret);
+        showToast("Error changing plan. ");
+      }
+    } catch (e) {
+      const err = e.message || e.toString();
+      console.log(err);
+      proPlanBtn.disabled = false;
+      basicPlanBtn.disabled = true;
+      event.target.disabled = false;
+      if (err.includes("Invalid Gumroad license")) {
+        showToast("Invalid Licesne. Please check it again");
+      } else {
+        showToast("Error in changing plan. Please, contact admin");
+      }
+    }
+  });
+
+function showToast(message, type = "error") {
+  let toastContainer = document.getElementById("cnv-toast-container");
+
+  // Create container if it doesn't exist
+  if (!toastContainer) {
+    toastContainer = document.createElement("div");
+    toastContainer.id = "cnv-toast-container";
+    toastContainer.style.position = "fixed";
+    toastContainer.style.bottom = "32px";
+    toastContainer.style.left = "50%";
+    toastContainer.style.transform = "translateX(-50%)";
+    toastContainer.style.zIndex = "99999";
+    document.body.appendChild(toastContainer);
   }
-});
+
+  // Create toast element
+  const toastEl = document.createElement("div");
+  toastEl.className = `toast align-items-center text-white border-0 show ${
+    type === "error"
+      ? "bg-danger"
+      : type === "success"
+      ? "bg-success"
+      : "bg-dark"
+  }`;
+  toastEl.setAttribute("role", "alert");
+  toastEl.setAttribute("aria-live", "assertive");
+  toastEl.setAttribute("aria-atomic", "true");
+
+  toastEl.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body">
+        ${message}
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  `;
+
+  // Append toast to container
+  toastContainer.appendChild(toastEl);
+
+  // Auto-hide after 3 seconds
+  setTimeout(() => {
+    toastEl.classList.remove("show");
+    setTimeout(() => toastEl.remove(), 300); // Remove from DOM
+  }, 3000);
+}
