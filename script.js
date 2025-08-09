@@ -69,8 +69,8 @@ async function checkSession() {
     if (lastLogin && Date.now() - parseInt(lastLogin) < 10 * 60 * 1000) {
       console.log("Recent session detected, skipping session check.");
       showApp();
-      const plan = sessionStorage.getItem("plan");
-      checkPlan(plan && plan == "pro" ? proPlan : basicPlan);
+      checkPlan(sessionStorage.getItem("plan"));
+      showSignOutButton(sessionStorage.getItem("email"));
       return;
     }
 
@@ -89,6 +89,7 @@ async function checkSession() {
           const plan = sessionStorage.getItem("plan");
           if (email && plan) {
             showSignOutButton(email);
+            console.log("emali", email);
             showApp();
             checkPlan(plan);
           } else {
@@ -251,9 +252,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   try {
     await loadEnv();
     await checkSession();
+    document.getElementById("serverError").classList.add("d-none");
+    showApp();
   } catch (e) {
     console.log("something wrong ", e.message || e.toString());
-    showLogin();
+    appContent.classList.add("d-none");
+    document.getElementById("serverError").classList.remove("d-none");
   }
 });
 
@@ -484,28 +488,25 @@ document
 
 /* ----------- change plan  ------------ */
 function checkGoogleSheet(plan) {
-  if (!plan) {
-    alert("Something wrong in plan");
-  }
-
-  if (plan === "basic") {
-    upgradeNote.classList.remove("d-none");
-    googleSheetRadio.disabled = true;
-    googleSheetOption.disabled = true;
-    sheetUrlInput.disabled = true;
-    sheetNameInput.disabled = true;
-
-    // Optional: add visual cue
-    googleSheetOption.style.opacity = 0.5;
-  } else {
+  if (plan === "pro") {
     upgradeNote.classList.add("d-none");
     googleSheetRadio.disabled = false;
     googleSheetOption.disabled = false;
     sheetUrlInput.disabled = false;
     sheetNameInput.disabled = false;
-
+    
     // Optional: add visual cue
     googleSheetOption.style.opacity = 1;
+
+  } else {
+    upgradeNote.classList.remove("d-none");
+    googleSheetRadio.disabled = true;
+    googleSheetOption.disabled = true;
+    sheetUrlInput.disabled = true;
+    sheetNameInput.disabled = true;
+    
+    // Optional: add visual cue
+    googleSheetOption.style.opacity = 0.5;
   }
 }
 
